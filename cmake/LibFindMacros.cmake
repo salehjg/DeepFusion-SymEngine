@@ -29,6 +29,8 @@ function (libfind_library libname pkg)
     find_library(${LIBNAME}_LIBRARY
         NAMES
             ${libname} ${ARGN}
+        HINTS
+            ${CMAKE_PREFIX_PATH}/${pkg}/lib
     )
 
     if (NOT TARGET ${libname})
@@ -43,5 +45,7 @@ function (libfind_include HEADER pkg)
     find_path(${PKG}_INCLUDE_DIR
         NAMES
             ${HEADER} ${ARGN}
+        HINTS
+            ${CMAKE_PREFIX_PATH}/${pkg}/include
     )
 endfunction()
