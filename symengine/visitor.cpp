@@ -6,6 +6,10 @@
     void CLASS::accept(Visitor &v) const                                       \
     {                                                                          \
         v.visit(*this);                                                        \
+    }                                                                          \
+    SymEngine::vec_basic CLASS::accept2(Visitor2 &v) const                     \
+    {                                                                          \
+        return v.visit2(*this);                                                \
     }
 
 namespace SymEngine
