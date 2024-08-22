@@ -57,6 +57,7 @@ std::string type_code_name(TypeID id);
 #include "basic-methods.inc"
 
 class Visitor;
+class Visitor2;
 class Symbol;
 
 /**

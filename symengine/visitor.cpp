@@ -29,6 +29,20 @@ void postorder_traversal(const Basic &b, Visitor &v)
     b.accept(v);
 }
 
+void preorder_traversal(const Basic &b, Visitor2 &v)
+{
+    b.accept2(v);
+    for (const auto &p : b.get_args())
+        preorder_traversal(*p, v);
+}
+
+void postorder_traversal(const Basic &b, Visitor2 &v)
+{
+    for (const auto &p : b.get_args())
+        postorder_traversal(*p, v);
+    b.accept2(v);
+}
+
 void preorder_traversal_stop(const Basic &b, StopVisitor &v)
 {
     b.accept(v);
