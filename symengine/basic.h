@@ -58,6 +58,7 @@ std::string type_code_name(TypeID id);
 
 class Visitor;
 class Visitor2;
+class Visitor3;
 class Symbol;
 
 /**
