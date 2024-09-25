@@ -3,30 +3,6 @@
 
 namespace SymEngine
 {
-//! DeepFusion Patch:
-bool Symbol::is_link() const{
-    return isLink;
-}
-
-void Symbol::set_link_flag(bool flag) const{
-    isLink = flag;
-}
-
-size_t Symbol::get_local_symbol_index() const{
-    return localSymbolIndex;
-}
-
-void Symbol::set_local_symbol_index(size_t index) const {
-    localSymbolIndex = index;
-}
-
-size_t Symbol::get_target_tensor_id() const{
-    return targetTensorId;
-}
-
-void Symbol::set_target_tensor_id(size_t id) const{
-    targetTensorId = id;
-}
 
 Symbol::Symbol(const std::string &name)
     : name_{name} {SYMENGINE_ASSIGN_TYPEID()}

@@ -16,21 +16,9 @@ class Symbol : public Basic
 private:
     //! name of Symbol
     std::string name_;
-    //! DeepFusion Patch:
-    mutable bool isLink=false;
-    mutable size_t localSymbolIndex=0;
-    mutable size_t targetTensorId=0;
 
 public:
     IMPLEMENT_TYPEID(SYMENGINE_SYMBOL)
-
-    //! DeepFusion Patch:
-    bool is_link() const;
-    void set_link_flag(bool flag) const;
-    size_t get_local_symbol_index() const;
-    void set_local_symbol_index(size_t index) const;
-    size_t get_target_tensor_id() const;
-    void set_target_tensor_id(size_t id) const;
 
     //! Symbol Constructor
     explicit Symbol(const std::string &name);
