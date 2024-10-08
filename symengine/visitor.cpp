@@ -14,6 +14,10 @@
     std::string CLASS::accept3(Visitor3 &v) const                              \
     {                                                                          \
         return v.visit3(*this);                                                \
+    }                                                                          \
+    size_t CLASS::accept4(Visitor4 &v) const                                   \
+    {                                                                          \
+        return v.visit4(*this);                                                \
     }
 
 namespace SymEngine
@@ -63,6 +67,19 @@ void postorder_traversal(const Basic &b, Visitor3 &v)
     for (const auto &p : b.get_args())
         postorder_traversal(*p, v);
     b.accept3(v);
+}
+void preorder_traversal(const Basic &b, Visitor4 &v)
+{
+    b.accept4(v);
+    for (const auto &p : b.get_args())
+        preorder_traversal(*p, v);
+}
+
+void postorder_traversal(const Basic &b, Visitor4 &v)
+{
+    for (const auto &p : b.get_args())
+        postorder_traversal(*p, v);
+    b.accept4(v);
 }
 
 void preorder_traversal_stop(const Basic &b, StopVisitor &v)

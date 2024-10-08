@@ -58,6 +58,15 @@ public:
 #undef SYMENGINE_ENUM
 };
 
+class Visitor4
+{
+public:
+    virtual ~Visitor4(){};
+#define SYMENGINE_ENUM(TypeID, Class) virtual size_t visit4(const Class &) = 0;
+#include "symengine/type_codes.inc"
+#undef SYMENGINE_ENUM
+};
+
 void preorder_traversal(const Basic &b, Visitor &v);
 void postorder_traversal(const Basic &b, Visitor &v);
 
@@ -66,6 +75,9 @@ void postorder_traversal(const Basic &b, Visitor2 &v);
 
 void preorder_traversal(const Basic &b, Visitor3 &v);
 void postorder_traversal(const Basic &b, Visitor3 &v);
+
+void preorder_traversal(const Basic &b, Visitor4 &v);
+void postorder_traversal(const Basic &b, Visitor4 &v);
 
 template <class Derived, class Base = Visitor>
 class BaseVisitor : public Base
@@ -156,6 +168,37 @@ public:
     virtual std::string visit3(const Class &x)                        \
     {                                                                          \
         return down_cast<Derived *>(this)->bvisit3(x);                         \
+    };
+#include "symengine/type_codes.inc"
+#undef SYMENGINE_ENUM
+};
+
+template <class Derived, class Base = Visitor4>
+class BaseVisitor4 : public Base
+{
+
+public:
+#if (defined(__GNUC__) && __GNUC__ == 4 && __GNUC_MINOR__ < 8                  \
+     || defined(__SUNPRO_CC))
+    // Following two ctors can be replaced by `using Base::Base` if inheriting
+    // constructors are allowed by the compiler. GCC 4.8 is the earliest
+    // version supporting this.
+    template <typename... Args,
+              typename
+              = enable_if_t<std::is_constructible<Base, Args...>::value>>
+    BaseVisitor(Args &&...args) : Base(std::forward<Args>(args)...)
+    {
+    }
+
+    BaseVisitor() : Base() {}
+#else
+    using Base::Base;
+#endif
+
+#define SYMENGINE_ENUM(TypeID, Class)                                          \
+    virtual size_t visit4(const Class &x)                        \
+    {                                                                          \
+        return down_cast<Derived *>(this)->bvisit4(x);                         \
     };
 #include "symengine/type_codes.inc"
 #undef SYMENGINE_ENUM
