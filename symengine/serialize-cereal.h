@@ -41,7 +41,7 @@ inline void save_basic(Archive &ar, const Basic &b)
 template <class Archive>
 inline void save_basic(Archive &ar, const Symbol &b)
 {
-    ar(b.__str__());
+    ar(b.__str__(), b.is_link(), b.get_local_symbol_index(), b.get_target_tensor_id());
 }
 template <class Archive>
 inline void save_basic(Archive &ar, const Mul &b)
@@ -333,8 +333,13 @@ template <class Archive>
 RCP<const Basic> load_basic(Archive &ar, RCP<const Symbol> &)
 {
     std::string name;
-    ar(name);
+    bool isLink;
+    size_t localSymbolIndex, targetTensorId;
+    ar(name, isLink, localSymbolIndex, targetTensorId);
     auto s = symbol(name);
+    s->set_link_flag(isLink);
+    s->set_local_symbol_index(localSymbolIndex);
+    s->set_target_tensor_id(targetTensorId);
     return s;
 }
 template <class Archive>

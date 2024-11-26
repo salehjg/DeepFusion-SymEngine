@@ -472,7 +472,7 @@ public:
     {
         if (next_symbol_gen== nullptr) {
             RCP<const Symbol> sym = symbol("x" + to_string(next_symbol_index));
-            //sym->set_link_flag(true);
+            sym->set_link_flag(true);
             next_symbol_index++;
             if (excluded_symbols.find(sym) == excluded_symbols.end()) {
                 return sym;
