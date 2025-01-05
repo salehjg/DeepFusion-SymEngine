@@ -4,6 +4,7 @@
 #include <symengine/real_mpfr.h>
 #include <symengine/ntheory_funcs.h>
 #include <symengine/parser/tokenizer.h>
+#include <fast_float/fast_float.h>
 
 namespace SymEngine
 {
@@ -92,6 +93,7 @@ init_parser_single_arg_functions()
             {"gamma", gamma},
             {"sqrt", sqrt},
             {"abs", abs},
+            {"sign", sign},
             {"exp", exp},
             {"erf", erf},
             {"erfc", erfc},
@@ -310,8 +312,8 @@ RCP<const Basic> Parser::parse_numeric(const std::string &expr)
             }
         }
         if (digits <= 15) {
-            char *endptr = 0;
-            double d = std::strtod(startptr, &endptr);
+            double d;
+            fast_float::from_chars(startptr, startptr + expr.size(), d);
             return real_double(d);
         } else {
             // mpmath.libmp.libmpf.dps_to_prec
@@ -320,8 +322,8 @@ RCP<const Basic> Parser::parse_numeric(const std::string &expr)
             return real_mpfr(mpfr_class(expr, prec));
         }
 #else
-        char *endptr = 0;
-        double d = std::strtod(startptr, &endptr);
+        double d;
+        fast_float::from_chars(startptr, startptr + expr.size(), d);
         return real_double(d);
 #endif
     }
@@ -331,8 +333,9 @@ std::tuple<RCP<const Basic>, RCP<const Basic>>
 Parser::parse_implicit_mul(const std::string &expr)
 {
     const char *startptr = expr.c_str();
-    char *endptr = 0;
-    std::strtod(startptr, &endptr);
+    double result;
+    const char *endptr
+        = fast_float::from_chars(startptr, startptr + expr.size(), result).ptr;
 
     RCP<const Basic> num = one, sym;
 
