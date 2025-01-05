@@ -3,6 +3,7 @@
 #include <symengine/mul.h>
 #include <symengine/functions.h>
 #include <symengine/visitor.h>
+#include <functional>
 
 #include <queue>
 
@@ -10,7 +11,8 @@ namespace SymEngine
 {
 umap_basic_basic opt_cse(const vec_basic &exprs);
 void tree_cse(vec_pair &replacements, vec_basic &reduced_exprs,
-              const vec_basic &exprs, umap_basic_basic &opt_subs);
+              const vec_basic &exprs, umap_basic_basic &opt_subs,
+              const std::function<RCP<const Basic>()> &next_symbol_gen);
 
 class FuncArgTracker
 {
@@ -426,15 +428,18 @@ private:
     set_basic &excluded_symbols;
     vec_pair &replacements;
     unsigned next_symbol_index = 0;
+    const std::function<RCP<const Basic>()> next_symbol_gen;
 
 public:
     using TransformVisitor::bvisit;
     using TransformVisitor::result_;
     RebuildVisitor(umap_basic_basic &subs_, umap_basic_basic &opt_subs_,
                    set_basic &to_eliminate_, set_basic &excluded_symbols_,
-                   vec_pair &replacements_)
+                   vec_pair &replacements_,
+                   const std::function<RCP<const Basic>()> &next_symbol_gen)
         : subs(subs_), opt_subs(opt_subs_), to_eliminate(to_eliminate_),
-          excluded_symbols(excluded_symbols_), replacements(replacements_)
+          excluded_symbols(excluded_symbols_), replacements(replacements_),
+          next_symbol_gen(next_symbol_gen)
     {
     }
     RCP<const Basic> apply(const RCP<const Basic> &orig_expr) override
@@ -465,14 +470,20 @@ public:
     }
     RCP<const Basic> next_symbol()
     {
-        RCP<const Basic> sym = symbol("x" + to_string(next_symbol_index));
-        next_symbol_index++;
-        if (excluded_symbols.find(sym) == excluded_symbols.end()) {
-            return sym;
+        if (next_symbol_gen== nullptr) {
+            RCP<const Symbol> sym = symbol("x" + to_string(next_symbol_index));
+            sym->set_link_flag(true);
+            next_symbol_index++;
+            if (excluded_symbols.find(sym) == excluded_symbols.end()) {
+                return sym;
+            } else {
+                return next_symbol();
+            }
         } else {
-            return next_symbol();
+            return next_symbol_gen();
         }
-    };
+    }
+
     void bvisit(const FunctionSymbol &x)
     {
         auto &fargs = x.get_vec();
@@ -493,7 +504,8 @@ public:
 };
 
 void tree_cse(vec_pair &replacements, vec_basic &reduced_exprs,
-              const vec_basic &exprs, umap_basic_basic &opt_subs)
+              const vec_basic &exprs, umap_basic_basic &opt_subs,
+              const std::function<RCP<const Basic>()> &next_symbol_gen)
 {
     set_basic to_eliminate;
     set_basic seen_subexp;
@@ -536,7 +548,8 @@ void tree_cse(vec_pair &replacements, vec_basic &reduced_exprs,
     umap_basic_basic subs;
 
     RebuildVisitor rebuild_visitor(subs, opt_subs, to_eliminate,
-                                   excluded_symbols, replacements);
+                                   excluded_symbols, replacements,
+                                   next_symbol_gen);
 
     for (auto &e : exprs) {
         auto reduced_e = rebuild_visitor.apply(e);
@@ -545,12 +558,14 @@ void tree_cse(vec_pair &replacements, vec_basic &reduced_exprs,
 }
 
 void cse(vec_pair &replacements, vec_basic &reduced_exprs,
-         const vec_basic &exprs)
+         const vec_basic &exprs,
+         const std::function<RCP<const Basic>()> &next_symbol_gen)
 {
     // Find other optimization opportunities.
     umap_basic_basic opt_subs = opt_cse(exprs);
 
     // Main CSE algorithm.
-    tree_cse(replacements, reduced_exprs, exprs, opt_subs);
+    tree_cse(replacements, reduced_exprs, exprs,
+             opt_subs, next_symbol_gen);
 }
 } // namespace SymEngine

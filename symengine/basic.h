@@ -57,6 +57,9 @@ std::string type_code_name(TypeID id);
 #include "basic-methods.inc"
 
 class Visitor;
+class Visitor2;
+class Visitor3;
+class Visitor4;
 class Symbol;
 
 /**
@@ -282,7 +285,7 @@ RCP<const Basic> rewrite_as_cos(const RCP<const Basic> &x);
 // Common subexpression elimination of symbolic expressions
 // Return a vector of replacement pairs and a vector of reduced exprs
 void cse(vec_pair &replacements, vec_basic &reduced_exprs,
-         const vec_basic &exprs);
+         const vec_basic &exprs, const std::function<RCP<const Basic>()> &next_symbol_gen= nullptr);
 
 /*! This `<<` overloaded function simply calls `p.__str__`, so it allows any
    Basic
