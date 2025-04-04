@@ -190,6 +190,12 @@ public:
     //! Creates an instance of a serialized string.
     static RCP<const Basic> loads(const std::string &);
 
+    //! Returns a string of the vector of instances serialized.
+    static std::string dumps_vec(const vec_basic &v);
+
+    //! Creates a vector of instances of a serialized string.
+    static vec_basic loads_vec(const std::string &);
+
     //! Substitutes 'subs_dict' into 'self'.
     RCP<const Basic> subs(const map_basic_basic &subs_dict) const;
 

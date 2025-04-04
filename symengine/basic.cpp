@@ -77,6 +77,49 @@ RCP<const Basic> Basic::loads(const std::string &serialized)
     return obj;
 }
 
+std::string Basic::dumps_vec(const vec_basic &v)
+{
+    std::ostringstream oss;
+    unsigned short major = SYMENGINE_MAJOR_VERSION;
+    unsigned short minor = SYMENGINE_MINOR_VERSION;
+    size_t vec_len = v.size();
+    RCPBasicAwareOutputArchive<cereal::PortableBinaryOutputArchive>ser{oss};
+
+    ser(major, minor, vec_len);
+    for (size_t i = 0; i < vec_len; i++) {
+        ser(v[i]);
+    }
+    return oss.str();
+}
+
+vec_basic Basic::loads_vec(const std::string &str)
+{
+    unsigned short major, minor;
+    size_t vec_len;
+    vec_basic v;
+    std::istringstream iss(str);
+    RCPBasicAwareInputArchive<cereal::PortableBinaryInputArchive> iarchive{iss};
+    iarchive(major, minor, vec_len);
+    if (major != SYMENGINE_MAJOR_VERSION or minor != SYMENGINE_MINOR_VERSION) {
+        throw SerializationError(StreamFmt()
+                                 << "SymEngine-" << SYMENGINE_MAJOR_VERSION
+                                 << "." << SYMENGINE_MINOR_VERSION
+                                 << " was asked to deserialize an object "
+                                 << "created using SymEngine-" << major << "."
+                                 << minor << ".");
+    }
+    if (vec_len == 0) {
+        throw SerializationError("Cannot deserialize an empty vector.");
+    }
+
+    for (size_t i = 0; i < vec_len; ++i) {
+        RCP<const Basic> p;
+        iarchive(p);
+        v.push_back(p);
+    }
+    return v;
+}
+
 RCP<const Basic> Basic::subs(const map_basic_basic &subs_dict) const
 {
     return SymEngine::subs(this->rcp_from_this(), subs_dict);
