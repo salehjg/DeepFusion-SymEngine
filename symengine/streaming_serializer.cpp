@@ -5,6 +5,7 @@
 #include <symengine/serialize-cereal.h>
 #include <symengine/basic.h>
 #include <symengine/streaming_serializer.h>
+#include <memory>
 
 
 SymEngine::streaming_serializer::streaming_serializer(
@@ -16,7 +17,6 @@ SymEngine::streaming_serializer::streaming_serializer(
     if (!file) {
         throw std::ios_base::failure("Failed to open file.");
     }
-
     ser = std::make_unique<
         RCPBasicAwareOutputArchive<cereal::PortableBinaryOutputArchive>
     >(file);

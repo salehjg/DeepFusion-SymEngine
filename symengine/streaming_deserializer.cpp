@@ -5,6 +5,7 @@
 #include <symengine/serialize-cereal.h>
 #include <symengine/basic.h>
 #include <symengine/streaming_deserializer.h>
+#include <memory>
 
 SymEngine::streaming_deserializer::streaming_deserializer(
     const std::string &filename):

@@ -37,6 +37,8 @@ add_subdirectory(utilities/matchpycpp)
 set(SRC
     add.cpp
     basic.cpp
+    streaming_serializer.cpp
+    streaming_deserializer.cpp
     complex.cpp
     complex_double.cpp
     constants.cpp
@@ -163,6 +165,8 @@ endif()
 set(HEADERS
     add.h
     basic.h
+    streaming_serializer.h
+    streaming_deserializer.h
     basic-inl.h
     basic-methods.inc
     complex_double.h
