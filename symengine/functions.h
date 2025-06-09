@@ -93,7 +93,7 @@ public:
 
     inline int compare(const Basic &o) const override
     {
-        SYMENGINE_ASSERT(is_a<FunctionSymbol>(o))
+        SYMENGINE_ASSERT(is_a<MemAccess>(o))
         const MemAccess &s = down_cast<const MemAccess &>(o);
         if (tensor_name_ == s.tensor_name_)
             return unified_compare(get_vec(), s.get_vec());
