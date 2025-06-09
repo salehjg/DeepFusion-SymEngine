@@ -382,6 +382,8 @@ set_basic free_symbols(const MatrixBase &m);
 
 set_basic function_symbols(const Basic &b);
 
+set_basic memory_accesses(const Basic &b);
+
 class TransformVisitor : public BaseVisitor<TransformVisitor>
 {
 protected:
