@@ -501,6 +501,16 @@ public:
             result_ = x.create(newargs);
         }
     }
+
+    void bvisit(const MemAccess &x)
+    {
+        auto &fargs = x.get_vec();
+        vec_basic newargs;
+        for (const auto &a : fargs) {
+            newargs.push_back(apply(a));
+        }
+        result_ = x.create(x.get_name(), newargs, x.get_actual_val());
+    }
 };
 
 void tree_cse(vec_pair &replacements, vec_basic &reduced_exprs,

@@ -115,7 +115,7 @@ bool has_symbol(const Basic &b, const Basic &x)
 
 RCP<const Basic> coeff(const Basic &b, const Basic &x, const Basic &n)
 {
-    if (!(is_a<Symbol>(x) || is_a<FunctionSymbol>(x))) {
+    if (!(is_a<Symbol>(x) || is_a<FunctionSymbol>(x)|| is_a<MemAccess>(x))) {
         throw NotImplementedError("Not implemented for non (Function)Symbols.");
     }
     CoeffVisitor v(ptrFromRef(x), ptrFromRef(n));
@@ -192,6 +192,11 @@ set_basic function_symbols(const Basic &b)
     return atoms<FunctionSymbol>(b);
 }
 
+set_basic memory_accesses(const Basic &b)
+{
+    return atoms<MemAccess>(b);
+}
+
 RCP<const Basic> TransformVisitor::apply(const RCP<const Basic> &x)
 {
     x->accept(*this);
@@ -251,6 +256,17 @@ void TransformVisitor::bvisit(const MultiArgFunction &x)
         newargs.push_back(apply(a));
     }
     auto nbarg = x.create(newargs);
+    result_ = nbarg;
+}
+
+void TransformVisitor::bvisit(const MemAccess &x)
+{
+    auto fargs = x.get_args();
+    vec_basic newargs;
+    for (const auto &a : fargs) {
+        newargs.push_back(apply(a));
+    }
+    auto nbarg = x.create(x.get_name(), newargs, x.get_actual_val());
     result_ = nbarg;
 }
 

@@ -31,6 +31,7 @@ using SymEngine::DenseMatrix;
 using SymEngine::down_cast;
 using SymEngine::function_symbol;
 using SymEngine::FunctionSymbol;
+using SymEngine::MemAccess;
 using SymEngine::has_symbol;
 using SymEngine::Integer;
 using SymEngine::integer_class;

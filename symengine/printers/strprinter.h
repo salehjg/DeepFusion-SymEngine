@@ -176,6 +176,7 @@ public:
     void bvisit(const Constant &x);
     void bvisit(const Function &x);
     void bvisit(const FunctionSymbol &x);
+    void bvisit(const MemAccess &x);
     void bvisit(const Derivative &x);
     void bvisit(const Subs &x);
     void bvisit(const RealDouble &x);

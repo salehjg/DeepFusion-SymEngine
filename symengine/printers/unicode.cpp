@@ -658,6 +658,26 @@ void UnicodePrinter::bvisit(const FunctionSymbol &x)
     box_ = box;
 }
 
+void UnicodePrinter::bvisit(const MemAccess &x)
+{
+    StringBox box(x.get_name());
+    StringBox args;
+    StringBox comma(", ");
+    bool first = true;
+    for (auto arg : x.get_args()) {
+        if (first) {
+            first = false;
+        } else {
+            args.add_right(comma);
+        }
+        StringBox argbox = apply(arg);
+        args.add_right(argbox);
+    }
+    args.enclose_parens();
+    box.add_right(args);
+    box_ = box;
+}
+
 void UnicodePrinter::bvisit(const Tuple &x)
 {
     vec_basic vec = x.get_args();

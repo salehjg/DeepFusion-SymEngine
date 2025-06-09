@@ -68,6 +68,7 @@ public:
     void bvisit(const Derivative &self);
     void bvisit(const OneArgFunction &self);
     void bvisit(const MultiArgFunction &self);
+    void bvisit(const MemAccess &self);
     void bvisit(const TwoArgFunction &self);
     void bvisit(const PolyGamma &self);
     void bvisit(const UpperGamma &self);

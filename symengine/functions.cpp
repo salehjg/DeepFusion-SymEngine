@@ -1857,11 +1857,13 @@ RCP<const Basic> lambertw(const RCP<const Basic> &arg)
 }
 
 FunctionSymbol::FunctionSymbol(std::string name, const RCP<const Basic> &arg)
-    : MultiArgFunction({arg}), name_{name} {SYMENGINE_ASSIGN_TYPEID()
-                                                SYMENGINE_ASSERT(
-                                                    is_canonical(get_vec()))}
+    : MultiArgFunction({arg}), name_{name}
+{
+    SYMENGINE_ASSIGN_TYPEID()
+    SYMENGINE_ASSERT(is_canonical(get_vec()))
+}
 
-      FunctionSymbol::FunctionSymbol(std::string name, const vec_basic &arg)
+FunctionSymbol::FunctionSymbol(std::string name, const vec_basic &arg)
     : MultiArgFunction(arg), name_{name}
 {
     SYMENGINE_ASSIGN_TYPEID()
@@ -1945,6 +1947,29 @@ bool Derivative::is_canonical(const RCP<const Basic> &arg,
             RCP<const Symbol> s = rcp_static_cast<const Symbol>(p);
             RCP<const MultiArgFunction> f
                 = rcp_static_cast<const MultiArgFunction>(arg);
+            bool found_s = false;
+            // 's' should be one of the args of the function
+            // and should not appear anywhere else.
+            for (const auto &a : f->get_args()) {
+                if (eq(*a, *s)) {
+                    if (found_s) {
+                        return false;
+                    } else {
+                        found_s = true;
+                    }
+                } else if (neq(*a->diff(s), *zero)) {
+                    return false;
+                }
+            }
+            if (!found_s) {
+                return false;
+            }
+        }
+        return true;
+    } else if (is_a<MemAccess>(*arg)) {
+        for (auto &p : x) {
+            RCP<const Symbol> s = rcp_static_cast<const Symbol>(p);
+            RCP<const MemAccess> f = rcp_static_cast<const MemAccess>(arg);
             bool found_s = false;
             // 's' should be one of the args of the function
             // and should not appear anywhere else.

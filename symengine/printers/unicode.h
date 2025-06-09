@@ -65,6 +65,7 @@ public:
     void bvisit(const Function &x);
 
     void bvisit(const FunctionSymbol &x);
+    void bvisit(const MemAccess &x);
     void bvisit(const RealDouble &x);
     void bvisit(const ComplexDouble &x);
     void bvisit(const Equality &x);

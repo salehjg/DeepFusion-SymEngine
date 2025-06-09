@@ -19,6 +19,7 @@ using SymEngine::EulerGamma;
 using SymEngine::free_symbols;
 using SymEngine::function_symbol;
 using SymEngine::FunctionSymbol;
+using SymEngine::MemAccess;
 using SymEngine::has_symbol;
 using SymEngine::I;
 using SymEngine::Integer;

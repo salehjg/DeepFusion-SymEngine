@@ -48,15 +48,86 @@ static inline RCP<const Basic> fdiff(const T &self, RCP<const Symbol> x,
             new_args[i] = get_dummy(self, "xi_" + stm.str());
             map_basic_basic m;
             insert(m, new_args[i], v[i]);
-            diff = add(diff, mul(vdiff[i],
-                                 make_rcp<const Subs>(
-                                     Derivative::create(self.create(new_args),
-                                                        {new_args[i]}),
-                                     m)));
+
+            if constexpr (std::is_same<T, MemAccess>::value) {
+                diff = add(diff, mul(vdiff[i],
+                                     make_rcp<const Subs>(
+                                         Derivative::create(self.create(self.get_name(), new_args, self.get_actual_val()),
+                                                            {new_args[i]}),
+                                         m)));
+            } else {
+                diff = add(diff, mul(vdiff[i],
+                                     make_rcp<const Subs>(
+                                         Derivative::create(self.create(new_args),
+                                                            {new_args[i]}),
+                                         m)));
+            }
         }
     }
     return diff;
 }
+
+/*
+template <>
+inline RCP<const Basic> fdiff<MemAccess>(const MemAccess &self, RCP<const Symbol> x,
+                                         DiffVisitor &visitor)
+{
+    RCP<const Basic> diff = zero;
+    RCP<const Basic> ret;
+    bool know_deriv;
+
+    vec_basic v = self.get_args();
+    vec_basic vdiff(v.size());
+
+    unsigned count = 0;
+    for (unsigned i = 0; i < v.size(); i++) {
+        vdiff[i] = visitor.apply(v[i]);
+        if (neq(*vdiff[i], *zero)) {
+            count++;
+        }
+    }
+
+    if (count == 0) {
+        return diff;
+    }
+
+    for (unsigned i = 0; i < v.size(); i++) {
+        if (eq(*vdiff[i], *zero))
+            continue;
+        know_deriv = fdiff(outArg(ret), self, i);
+        if (know_deriv) {
+            diff = add(diff, mul(ret, vdiff[i]));
+        } else {
+            if (count == 1 and eq(*v[i], *x)) {
+                return Derivative::create(self.rcp_from_this(), {x});
+            }
+            vec_basic new_args = v;
+            std::ostringstream stm;
+            stm << (i + 1);
+            new_args[i] = get_dummy(self, "xi_" + stm.str());
+            map_basic_basic m;
+            insert(m, new_args[i], v[i]);
+            diff = add(
+                diff,
+                mul(
+                    vdiff[i],
+                    make_rcp<const Subs>(
+                        Derivative::create(
+                            self.create(
+                                self.get_name(),
+                                new_args,
+                                self.get_actual_val()
+                                ),
+                                {new_args[i]}
+                        ),
+                    m
+                    )
+                )
+            );
+        }
+    }
+    return diff;
+}*/
 
 static bool fdiff(const Ptr<RCP<const Basic>> &ret, const Zeta &self,
                   unsigned index)
@@ -107,6 +178,12 @@ static bool fdiff(const Ptr<RCP<const Basic>> &ret, const PolyGamma &self,
 }
 
 static bool fdiff(const Ptr<RCP<const Basic>> &ret, const Function &self,
+                  unsigned index)
+{
+    // Don't know the derivative, fallback to `Derivative` instances
+    return false;
+}
+static bool fdiff(const Ptr<RCP<const Basic>> &ret, const MemAccess &self,
                   unsigned index)
 {
     // Don't know the derivative, fallback to `Derivative` instances
@@ -407,6 +484,11 @@ void DiffVisitor::bvisit(const OneArgFunction &self)
 }
 
 void DiffVisitor::bvisit(const MultiArgFunction &self)
+{
+    result_ = fdiff(self, x, *this);
+}
+
+void DiffVisitor::bvisit(const MemAccess &self)
 {
     result_ = fdiff(self, x, *this);
 }

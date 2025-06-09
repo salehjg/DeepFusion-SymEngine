@@ -889,6 +889,15 @@ void StrPrinter::bvisit(const FunctionSymbol &x)
     str_ = o.str();
 }
 
+void StrPrinter::bvisit(const MemAccess &x)
+{
+    std::ostringstream o;
+    o << x.get_name();
+    vec_basic vec = x.get_args();
+    o << parenthesize(apply(vec));
+    str_ = o.str();
+}
+
 void StrPrinter::bvisit(const Derivative &x)
 {
     std::ostringstream o;

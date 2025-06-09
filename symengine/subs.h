@@ -175,6 +175,15 @@ public:
         result_ = x.create(v);
     }
 
+    void bvisit(const MemAccess &x)
+    {
+        vec_basic v = x.get_args();
+        for (auto &elem : v) {
+            elem = apply(elem);
+        }
+        result_ = x.create(x.get_name(), v, x.get_actual_val());
+    }
+
     void bvisit(const Contains &x)
     {
         RCP<const Basic> a = apply(x.get_expr());

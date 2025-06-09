@@ -34,15 +34,15 @@ endif ()
 set(BUILD_FOR_DISTRIBUTION no
     CACHE BOOL "Building SymEngine for a distribution")
 
-# Enable C++14 support in all compilers. SymEngine will not compile unless
-# the C++14 support is enabled.
+# Enable C++17 support in all compilers. SymEngine will not compile unless
+# the C++17 support is enabled.
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang|Intel|SunPRO")
-    set(CXX14_OPTIONS "-std=c++14")
+    set(CXX17_OPTIONS "-std=c++17")
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "PGI")
     # pgcpp
-    set(CXX14_OPTIONS "--gnu --c++14 -D__GXX_EXPERIMENTAL_CXX0X__")
+    set(CXX17_OPTIONS "--gnu --c++17 -D__GXX_EXPERIMENTAL_CXX0X__")
 endif ()
-set(CMAKE_CXX_FLAGS "${CXX14_OPTIONS} ${CMAKE_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CXX17_OPTIONS} ${CMAKE_CXX_FLAGS}")
 
 # Add proper -fPIC and MINGW handling
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")

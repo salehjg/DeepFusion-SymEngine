@@ -371,6 +371,11 @@ inline void save_basic(Archive &ar, const FunctionSymbol &b)
     ar(b.get_name(), b.get_args());
 }
 template <class Archive>
+inline void save_basic(Archive &ar, const MemAccess &b)
+{
+    ar(b.get_name(), b.get_args(), b.get_actual_val());
+}
+template <class Archive>
 inline void save_basic(Archive &ar, const Derivative &b)
 {
     ar(b.get_arg(), b.get_symbols());
@@ -721,6 +726,15 @@ RCP<const Basic> load_basic(Archive &ar, RCP<const FunctionSymbol> &)
     vec_basic vec;
     ar(name, vec);
     return make_rcp<const FunctionSymbol>(name, std::move(vec));
+}
+template <class Archive>
+RCP<const Basic> load_basic(Archive &ar, RCP<const MemAccess> &)
+{
+    std::string name;
+    float actual_val;
+    vec_basic vec;
+    ar(name, vec, actual_val);
+    return make_rcp<const MemAccess>(name, std::move(vec), actual_val);
 }
 template <class Archive>
 RCP<const Basic> load_basic(Archive &ar, RCP<const FunctionWrapper> &)

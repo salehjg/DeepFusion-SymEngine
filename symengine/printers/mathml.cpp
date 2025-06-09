@@ -301,6 +301,16 @@ void MathMLPrinter::bvisit(const FunctionSymbol &x)
     s << "</apply>";
 }
 
+void MathMLPrinter::bvisit(const MemAccess &x)
+{
+    s << "<apply><ci>" << x.get_name() << "</ci>";
+    const auto &args = x.get_args();
+    for (const auto &arg : args) {
+        arg->accept(*this);
+    }
+    s << "</apply>";
+}
+
 void MathMLPrinter::bvisit(const Equality &x)
 {
     s << "<apply><eq/>";

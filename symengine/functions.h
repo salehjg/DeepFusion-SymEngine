@@ -7,6 +7,8 @@
 #ifndef SYMENGINE_FUNCTIONS_H
 #define SYMENGINE_FUNCTIONS_H
 
+#include "real_double.h"
+
 #include <symengine/basic.h>
 #include <symengine/symengine_casts.h>
 #include <symengine/constants.h>
@@ -16,6 +18,103 @@ namespace SymEngine
 
 class Function : public Basic
 {
+};
+
+class MemAccess: public Function
+{
+private:
+    vec_basic arg_;
+    float actual_val_;
+protected:
+    std::string tensor_name_;
+public:
+    IMPLEMENT_TYPEID(SYMENGINE_MEMACCESS)
+    MemAccess(const std::string &name, const vec_basic &arg, float actual_val)
+    {
+        SYMENGINE_ASSIGN_TYPEID()
+        SYMENGINE_ASSERT(is_canonical(get_vec()))
+        tensor_name_ = name;
+        arg_ = arg;
+        actual_val_ = actual_val;
+    }
+
+    MemAccess(const std::string &name, const RCP<const Basic> &arg, float actual_val)
+    {
+        SYMENGINE_ASSIGN_TYPEID()
+        SYMENGINE_ASSERT(is_canonical(get_vec()))
+        tensor_name_ = name;
+        arg_ = {arg};
+        actual_val_ = actual_val;
+    }
+
+    inline vec_basic get_args() const override
+    {
+        return arg_;
+    }
+
+    inline const vec_basic &get_vec() const
+    {
+        return arg_;
+    }
+
+    inline const std::string &get_name() const
+    {
+        return tensor_name_;
+    }
+
+    inline float get_actual_val() const
+    {
+        return actual_val_;
+    }
+
+    RCP<const Basic> create(const std::string &tnName, const vec_basic &v, float actual_val) const
+    {
+        return make_rcp<MemAccess>(tnName, v, actual_val);
+    }
+
+    inline hash_t __hash__() const override
+    {
+        hash_t seed = SYMENGINE_MEMACCESS;
+        for (const auto &a : get_vec())
+            hash_combine<Basic>(seed, *a);
+        hash_combine<std::string>(seed, tensor_name_);
+        return seed;
+    }
+
+    inline bool __eq__(const Basic &o) const override
+    {
+        if (is_a<MemAccess>(o)
+            and tensor_name_ == down_cast<const MemAccess &>(o).tensor_name_
+            and unified_eq(get_vec(),
+                           down_cast<const MemAccess &>(o).get_vec()))
+            return true;
+        return false;
+    }
+
+    inline int compare(const Basic &o) const override
+    {
+        SYMENGINE_ASSERT(is_a<FunctionSymbol>(o))
+        const MemAccess &s = down_cast<const MemAccess &>(o);
+        if (tensor_name_ == s.tensor_name_)
+            return unified_compare(get_vec(), s.get_vec());
+        else
+            return tensor_name_ < s.tensor_name_ ? -1 : 1;
+    }
+
+    bool is_canonical(const vec_basic &arg) const
+    {
+        return true;
+    }
+
+    RCP<const Number> eval(long bits) const
+    {
+        return real_double(actual_val_);
+    }
+
+    RCP<const Basic> diff_impl(const RCP<const Symbol> &s) const
+    {
+        return zero;
+    }
 };
 
 class OneArgFunction : public Function

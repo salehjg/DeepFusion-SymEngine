@@ -245,6 +245,14 @@ public:
         }
     }
 
+    void bvisit(const MemAccess &x)
+    {
+        if (eq(*x_, x)) {
+            has_ = true;
+            stop_ = true;
+        }
+    }
+
     void bvisit(const Basic &x){};
 
     bool apply(const Basic &b)
@@ -334,6 +342,17 @@ public:
         }
     }
 
+    void bvisit(const MemAccess &x)
+    {
+        if (eq(x, *x_) and eq(*one, *n_)) {
+            coeff_ = one;
+        } else if (neq(x, *x_) and eq(*zero, *n_)) {
+            coeff_ = x.rcp_from_this();
+        } else {
+            coeff_ = zero;
+        }
+    }
+
     void bvisit(const Basic &x)
     {
         if (neq(*zero, *n_)) {
@@ -392,6 +411,7 @@ public:
     }
 
     void bvisit(const MultiArgFunction &x);
+    void bvisit(const MemAccess &x);
     void bvisit(const Piecewise &x);
 };
 
