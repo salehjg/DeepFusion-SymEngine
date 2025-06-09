@@ -80,6 +80,10 @@ public:
     {
         result_ = x.eval(bits)->rcp_from_this();
     }
+    void bvisit(const MemAccess &x)
+    {
+        result_ = x.eval(bits)->rcp_from_this();
+    }
 };
 
 RCP<const Basic> evalf(const Basic &b, unsigned long bits, EvalfDomain domain)
