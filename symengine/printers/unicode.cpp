@@ -660,7 +660,7 @@ void UnicodePrinter::bvisit(const FunctionSymbol &x)
 
 void UnicodePrinter::bvisit(const MemAccess &x)
 {
-    StringBox box(x.get_name());
+    StringBox box(x.get_tensor_id_as_string());
     StringBox args;
     StringBox comma(", ");
     bool first = true;

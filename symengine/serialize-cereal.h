@@ -373,7 +373,7 @@ inline void save_basic(Archive &ar, const FunctionSymbol &b)
 template <class Archive>
 inline void save_basic(Archive &ar, const MemAccess &b)
 {
-    ar(b.get_name(), b.get_args(), b.get_actual_val());
+    ar(b.get_tensor_id(), b.get_args());
 }
 template <class Archive>
 inline void save_basic(Archive &ar, const Derivative &b)
@@ -730,11 +730,10 @@ RCP<const Basic> load_basic(Archive &ar, RCP<const FunctionSymbol> &)
 template <class Archive>
 RCP<const Basic> load_basic(Archive &ar, RCP<const MemAccess> &)
 {
-    std::string name;
-    float actual_val;
+    unsigned char tensor_id;
     vec_basic vec;
-    ar(name, vec, actual_val);
-    return make_rcp<const MemAccess>(name, std::move(vec), actual_val);
+    ar(tensor_id, vec);
+    return make_rcp<const MemAccess>(tensor_id, std::move(vec));
 }
 template <class Archive>
 RCP<const Basic> load_basic(Archive &ar, RCP<const FunctionWrapper> &)

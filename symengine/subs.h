@@ -181,7 +181,7 @@ public:
         for (auto &elem : v) {
             elem = apply(elem);
         }
-        result_ = x.create(x.get_name(), v, x.get_actual_val());
+        result_ = x.create(x.get_tensor_id(), v);
     }
 
     void bvisit(const Contains &x)

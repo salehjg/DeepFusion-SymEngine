@@ -303,7 +303,7 @@ void MathMLPrinter::bvisit(const FunctionSymbol &x)
 
 void MathMLPrinter::bvisit(const MemAccess &x)
 {
-    s << "<apply><ci>" << x.get_name() << "</ci>";
+    s << "<apply><ci>" << x.get_tensor_id_as_string() << "</ci>";
     const auto &args = x.get_args();
     for (const auto &arg : args) {
         arg->accept(*this);

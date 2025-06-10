@@ -24,27 +24,24 @@ class MemAccess: public Function
 {
 private:
     vec_basic arg_;
-    float actual_val_;
 protected:
-    std::string tensor_name_;
+    unsigned char tensor_id_;
 public:
     IMPLEMENT_TYPEID(SYMENGINE_MEMACCESS)
-    MemAccess(const std::string &name, const vec_basic &arg, float actual_val)
+    MemAccess(unsigned char tensor_id, const vec_basic &arg)
     {
         SYMENGINE_ASSIGN_TYPEID()
         SYMENGINE_ASSERT(is_canonical(get_vec()))
-        tensor_name_ = name;
+        tensor_id_ = tensor_id;
         arg_ = arg;
-        actual_val_ = actual_val;
     }
 
-    MemAccess(const std::string &name, const RCP<const Basic> &arg, float actual_val)
+    MemAccess(unsigned char tensor_id, RCP<const Basic> &arg)
     {
         SYMENGINE_ASSIGN_TYPEID()
         SYMENGINE_ASSERT(is_canonical(get_vec()))
-        tensor_name_ = name;
+        tensor_id_ = tensor_id;
         arg_ = {arg};
-        actual_val_ = actual_val;
     }
 
     inline vec_basic get_args() const override
@@ -57,19 +54,19 @@ public:
         return arg_;
     }
 
-    inline const std::string &get_name() const
+    inline const unsigned char get_tensor_id() const
     {
-        return tensor_name_;
+        return tensor_id_;
     }
 
-    inline float get_actual_val() const
+    inline std::string get_tensor_id_as_string() const
     {
-        return actual_val_;
+        return std::to_string(tensor_id_);
     }
 
-    RCP<const Basic> create(const std::string &tnName, const vec_basic &v, float actual_val) const
+    RCP<const Basic> create(unsigned char tensor_id, const vec_basic &v) const
     {
-        return make_rcp<MemAccess>(tnName, v, actual_val);
+        return make_rcp<MemAccess>(tensor_id, v);
     }
 
     inline hash_t __hash__() const override
@@ -77,14 +74,14 @@ public:
         hash_t seed = SYMENGINE_MEMACCESS;
         for (const auto &a : get_vec())
             hash_combine<Basic>(seed, *a);
-        hash_combine<std::string>(seed, tensor_name_);
+        hash_combine<std::string>(seed, std::to_string(tensor_id_));
         return seed;
     }
 
     inline bool __eq__(const Basic &o) const override
     {
         if (is_a<MemAccess>(o)
-            and tensor_name_ == down_cast<const MemAccess &>(o).tensor_name_
+            and tensor_id_ == down_cast<const MemAccess &>(o).tensor_id_
             and unified_eq(get_vec(),
                            down_cast<const MemAccess &>(o).get_vec()))
             return true;
@@ -95,10 +92,11 @@ public:
     {
         SYMENGINE_ASSERT(is_a<MemAccess>(o))
         const MemAccess &s = down_cast<const MemAccess &>(o);
-        if (tensor_name_ == s.tensor_name_)
+        if (tensor_id_ == s.tensor_id_)
             return unified_compare(get_vec(), s.get_vec());
         else
-            return tensor_name_ < s.tensor_name_ ? -1 : 1;
+            ///TODO: what does this do?
+            return std::to_string(tensor_id_) < std::to_string(s.tensor_id_) ? -1 : 1;
     }
 
     bool is_canonical(const vec_basic &arg) const
@@ -108,7 +106,35 @@ public:
 
     RCP<const Number> eval(long bits) const
     {
-        return real_double(actual_val_);
+        throw std::runtime_error("This should not be called for MemAccess. The other overload should be used instead.");
+    }
+
+    /**
+     * A custom evaluation function for MemAccess that is only meant to be called
+     * by a custom evaluation visitor.
+     * It computes the flat row-major index and returns it as a size_t value.
+     *
+     * @param sliceDimSizes
+     * @param rank
+     * @return
+     */
+    size_t eval(const size_t* const sliceDimSizes, unsigned char rank) const
+    {
+
+#ifndef NDEBUG
+        // make sure all the arguments are numbers
+        // only in debug mode we check the arguments
+        for (const auto &a : arg_) {
+            if (not is_a_Number(*a)) {
+                throw std::runtime_error("MemAccess arguments must be numbers.");
+            }
+        }
+#endif
+        size_t flatRowMajorIndex = 0;
+        for (unsigned i = 0; i < rank; i++) {
+            flatRowMajorIndex += rcp_static_cast<const Integer>(arg_[i])->as_uint() * sliceDimSizes[i];
+        }
+        return flatRowMajorIndex;
     }
 
     RCP<const Basic> diff_impl(const RCP<const Symbol> &s) const

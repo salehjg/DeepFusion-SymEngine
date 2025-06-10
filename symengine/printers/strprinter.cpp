@@ -892,7 +892,7 @@ void StrPrinter::bvisit(const FunctionSymbol &x)
 void StrPrinter::bvisit(const MemAccess &x)
 {
     std::ostringstream o;
-    o << x.get_name();
+    o << x.get_tensor_id_as_string();
     vec_basic vec = x.get_args();
     o << parenthesize(apply(vec));
     str_ = o.str();

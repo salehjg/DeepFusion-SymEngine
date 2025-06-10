@@ -52,7 +52,7 @@ static inline RCP<const Basic> fdiff(const T &self, RCP<const Symbol> x,
             if constexpr (std::is_same<T, MemAccess>::value) {
                 diff = add(diff, mul(vdiff[i],
                                      make_rcp<const Subs>(
-                                         Derivative::create(self.create(self.get_name(), new_args, self.get_actual_val()),
+                                         Derivative::create(self.create(self.get_tensor_id(), new_args),
                                                             {new_args[i]}),
                                          m)));
             } else {

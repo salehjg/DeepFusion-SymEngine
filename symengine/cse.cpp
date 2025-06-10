@@ -509,7 +509,7 @@ public:
         for (const auto &a : fargs) {
             newargs.push_back(apply(a));
         }
-        result_ = x.create(x.get_name(), newargs, x.get_actual_val());
+        result_ = x.create(x.get_tensor_id(), newargs);
     }
 };
 
