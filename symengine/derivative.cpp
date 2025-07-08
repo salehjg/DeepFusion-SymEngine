@@ -488,7 +488,7 @@ void DiffVisitor::bvisit(const MultiArgFunction &self)
     if (self.get_type_code() == TypeID::SYMENGINE_FUNCTIONSYMBOL) {
         auto fs = rcp_static_cast<const FunctionSymbol>(self.rcp_from_this());
         if (fs->get_name() == "Sum") {
-            throw std::runtime_error("Summation support for sdiff is NIY."); // to make sure we dont use this visitor on an expr with Sum() without proper support for it.
+            throw std::runtime_error("Summation support for sdiff is NIY.");
             /// auto loopBody = fs->get_args()[0];
             /// // run diff for the loop body
             /// apply(loopBody);
@@ -507,17 +507,9 @@ void DiffVisitor::bvisit(const MultiArgFunction &self)
 
 void DiffVisitor::bvisit(const MemAccess &self)
 {
-    if (x->get_type_code() == TypeID::SYMENGINE_MEMACCESS) {
-        auto xx = rcp_static_cast<const MemAccess>(x);
-        result_ = \
-                xx->get_tensor_id() == self.get_tensor_id() &&
-                xx->get_args() == self.get_args() ?
-                one : zero;
-        return;
-    } else {
-        result_ = zero;
-        return;
-    }
+    // X cannot ever be a non symbol. If it is a symlined MemAccess, then all the other instances of it would also have to be the same symlink.
+    // It means that if we are here, the original MemAccess (x) is different from self and therefore was not substituted by the symlink Symbol.
+    result_ = zero;
 }
 
 void DiffVisitor::bvisit(const LambertW &self)
