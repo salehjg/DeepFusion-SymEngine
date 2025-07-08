@@ -485,12 +485,39 @@ void DiffVisitor::bvisit(const OneArgFunction &self)
 
 void DiffVisitor::bvisit(const MultiArgFunction &self)
 {
+    if (self.get_type_code() == TypeID::SYMENGINE_FUNCTIONSYMBOL) {
+        auto fs = rcp_static_cast<const FunctionSymbol>(self.rcp_from_this());
+        if (fs->get_name() == "Sum") {
+            throw std::runtime_error("Summation support for sdiff is NIY."); // to make sure we dont use this visitor on an expr with Sum() without proper support for it.
+            /// auto loopBody = fs->get_args()[0];
+            /// // run diff for the loop body
+            /// apply(loopBody);
+            /// auto dLoopBody = result_;
+            /// // now construct a new Sum with the new loop body and the same symIndices and ranges
+            /// auto args = fs->get_args();
+            /// args[0] = dLoopBody;
+            /// result_ = function_symbol("Sum", args);
+            /// return;
+        }
+    }
+
+    // dont put this in the else block.
     result_ = fdiff(self, x, *this);
 }
 
 void DiffVisitor::bvisit(const MemAccess &self)
 {
-    result_ = fdiff(self, x, *this);
+    if (x->get_type_code() == TypeID::SYMENGINE_MEMACCESS) {
+        auto xx = rcp_static_cast<const MemAccess>(x);
+        result_ = \
+                xx->get_tensor_id() == self.get_tensor_id() &&
+                xx->get_args() == self.get_args() ?
+                one : zero;
+        return;
+    } else {
+        result_ = zero;
+        return;
+    }
 }
 
 void DiffVisitor::bvisit(const LambertW &self)
