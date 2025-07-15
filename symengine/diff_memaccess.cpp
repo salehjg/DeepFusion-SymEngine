@@ -4,6 +4,39 @@
 #include "diff_memaccess.h"
 #include "modulo_visitor.h"
 
+RCP<const Basic> DiffVisitor2::Apply(RCP<const Basic> &expr,
+                                     RCP<const Basic> wrt)
+{
+    if (wrt->get_type_code() != TypeID::SYMENGINE_MEMACCESS) {
+        throw SymEngineException(
+            "DiffVisitor2: The wrt argument must be a MemAccess!");
+    }
+    m_pWrt = rcp_static_cast<const MemAccess>(wrt);
+    m_oResult_.clear();
+    m_iNestingLevel = 0;
+    m_vStackSymIndices.clear();
+    m_vStackLowerBonds.clear();
+    m_vStackUpperBonds.clear();
+    expr->accept(*this);
+    if (m_oResult_.empty()) {
+        throw SymEngineException(
+            "DiffVisitor2: There is no piecewise expr in the derivative!");
+    }
+    if (m_oResult_.size() > 1) {
+        throw SymEngineException("DiffVisitor2: There are more than one "
+                                 "piecewise expr in the derivative!");
+    }
+
+    // there is one piece, return its expr.
+    RCP<const Basic> result = m_oResult_[0].first;
+    if (m_bResolveModulos) {
+        ModuloVisitor visitor;
+        result = visitor.Apply(*result);
+    }
+
+    return result;
+}
+
 void ::DiffVisitor2::bvisit(const Add &self)
 {
     if (m_bDebug)
@@ -13,8 +46,8 @@ void ::DiffVisitor2::bvisit(const Add &self)
 
     for (const auto &a : self.get_args()) {
         if (m_bDebug)
-            std::cout << Indent() << "bvisit Add, accepting arg: " << a->
-                __str__() << "\n";
+            std::cout << Indent()
+                      << "bvisit Add, accepting arg: " << a->__str__() << "\n";
         a->accept(*this);
         PrintDetailedExprs(m_oResult_, "Result after visiting arg");
         result = AggrigateTwoDetailedExprs(result, m_oResult_, true, false);
@@ -37,20 +70,22 @@ void ::DiffVisitor2::bvisit(const Mul &self)
             if (i == j) {
                 args[j]->accept(*this);
                 if (m_bDebug)
-                    std::cout << Indent() << "bvisit Mul, i=" << i << ", j=" <<
-                        j << ", arg[j]: " << args[j]->__str__() << "\n";
+                    std::cout << Indent() << "bvisit Mul, i=" << i
+                              << ", j=" << j
+                              << ", arg[j]: " << args[j]->__str__() << "\n";
                 PrintDetailedExprs(m_oResult_, "Result after visiting arg[j]");
                 prod = AggrigateTwoDetailedExprs(prod, m_oResult_, false, true);
             } else {
                 if (m_bDebug)
-                    std::cout << Indent() << "bvisit Mul, i=" << i << ", j=" <<
-                        j << ", arg[j]: " << args[j]->__str__() << "\n";
-                prod = AggrigateTwoDetailedExprs(
-                    prod, {{args[j], {}}}, false, true);
+                    std::cout << Indent() << "bvisit Mul, i=" << i
+                              << ", j=" << j
+                              << ", arg[j]: " << args[j]->__str__() << "\n";
+                prod = AggrigateTwoDetailedExprs(prod, {{args[j], {}}}, false,
+                                                 true);
             }
         }
         // If the differentiated term is zero, skip
-        //if (eq(*prod[i], *zero))
+        // if (eq(*prod[i], *zero))
         //    continue;
         toBeSummed = AggrigateTwoDetailedExprs(toBeSummed, prod, true, false);
     }
@@ -124,18 +159,14 @@ void ::DiffVisitor2::bvisit(const Pow &self)
 void ::DiffVisitor2::bvisit(const Derivative &self)
 {
     if (m_bDebug)
-        std::cout << Indent() << "bvisit Derivative: " << self.__str__() <<
-            "\n";
+        std::cout << Indent() << "bvisit Derivative: " << self.__str__()
+                  << "\n";
     m_iNestingLevel++;
     throw std::runtime_error("Not implemented");
     /*
-    // If this is d/d(wrt) of Derivative(expr, wrt), return Derivative(expr, 2*wrt)
-    auto arg = self.get_arg();
-    auto symbols = self.get_symbols();
-    bool found = false;
-    for (auto &s : symbols) {
-        if (eq(*s, *wrt)) {
-            found = true;
+    // If this is d/d(wrt) of Derivative(expr, wrt), return Derivative(expr,
+    2*wrt) auto arg = self.get_arg(); auto symbols = self.get_symbols(); bool
+    found = false; for (auto &s : symbols) { if (eq(*s, *wrt)) { found = true;
             break;
         }
     }
@@ -214,6 +245,12 @@ void ::DiffVisitor2::bvisit(const MemAccess &self)
                                            return eq(*lv, *pSym);
                                        });
                 if (it != m_vStackSymIndices.end()) {
+                    // skip if pSym is already in stackSyms
+                    if (std::find(stackSyms.begin(), stackSyms.end(), pSym)
+                        != stackSyms.end()) {
+                        continue;
+                    }
+
                     // get the index
                     size_t idx = std::distance(m_vStackSymIndices.begin(), it);
                     stackSyms.push_back(pSym);
@@ -223,6 +260,19 @@ void ::DiffVisitor2::bvisit(const MemAccess &self)
             }
         }
     }
+    if (m_bDebug) {
+        // report both m_vStackUpperBonds and stackSyms
+        std::cout << Indent() << "Stack Symbols: ";
+        for (const auto &sym : m_vStackSymIndices) {
+            std::cout << sym->__str__() << " ";
+        }
+        std::cout << "\n";
+        std::cout << Indent() << "The used SymIndices from the stack: ";
+        for (const auto &sym : stackSyms) {
+            std::cout << sym->__str__() << " ";
+        }
+        std::cout << "\n";
+    }
     if (stackSyms.empty()) {
         m_oResult_ = {{zero, {}}};
         PrintDetailedExprs(m_oResult_, "Early exit6");
@@ -230,33 +280,36 @@ void ::DiffVisitor2::bvisit(const MemAccess &self)
         return;
     }
     VecMatchesMap vecMatchedMap;
-    DynamicLoop(
-        stackLBs, stackUBs,
-        [this, &self, &stackSyms, &vecMatchedMap](
-        const std::vector<size_t> &idx) {
-            // Replace SymIndex instances with their Integer values
-            map_basic_basic m;
-            for (size_t i = 0; i < stackSyms.size(); ++i) {
-                m[stackSyms[i]] = integer(idx[i]);
-            }
-            auto newSelfWithModulos = self.subs(m);
-            RCP<const Basic> newSelf = newSelfWithModulos;
+    DynamicLoop(stackLBs, stackUBs,
+                [this, &self, &stackSyms,
+                 &vecMatchedMap](const std::vector<size_t> &idx) {
+                    // Replace SymIndex instances with their Integer values
+                    map_basic_basic m;
+                    for (size_t i = 0; i < stackSyms.size(); ++i) {
+                        m[stackSyms[i]] = integer(idx[i]);
+                    }
+                    auto newSelfWithModulos = self.subs(m);
+                    RCP<const Basic> newSelf = newSelfWithModulos;
 
-            if (m_bResolveModulos) {
-                ModuloVisitor visitor;
-                newSelf = visitor.Apply(*newSelfWithModulos);
-            }
+                    if (m_bResolveModulos) {
+                        ModuloVisitor visitor;
+                        newSelf = visitor.Apply(*newSelfWithModulos);
+                    }
 
-            if (eq(*newSelf, *m_pWrt)) {
-                map_basic_basic mm;
-                for (int index = 0; index < idx.size(); ++index) {
-                    // Store the matched indices
-                    mm[stackSyms[index]] = integer(idx[index]);
-                }
-                vecMatchedMap.push_back(mm);
-            }
-        }
-    );
+                    if (m_bDebug) {
+                        std::cout << Indent() << "New Self after subs: "
+                                  << newSelf->__str__() << "\n";
+                    }
+
+                    if (eq(*newSelf, *m_pWrt)) {
+                        map_basic_basic mm;
+                        for (int index = 0; index < idx.size(); ++index) {
+                            // Store the matched indices
+                            mm[stackSyms[index]] = integer(idx[index]);
+                        }
+                        vecMatchedMap.push_back(mm);
+                    }
+                });
 
     if (vecMatchedMap.empty()) {
         m_oResult_ = {{zero, {}}};
@@ -271,8 +324,8 @@ void ::DiffVisitor2::bvisit(const MemAccess &self)
 void DiffVisitor2::bvisit(const FunctionSymbol &self)
 {
     if (m_bDebug)
-        std::cout << Indent() << "bvisit FunctionSymbol: " << self.__str__() <<
-            "\n";
+        std::cout << Indent() << "bvisit FunctionSymbol: " << self.__str__()
+                  << "\n";
     m_iNestingLevel++;
     if (self.get_name() == "Sum") {
         // ... your differentiation logic for Sum ...
@@ -330,10 +383,9 @@ void ::DiffVisitor2::bvisit(const Basic &self)
     m_oResult_ = {{zero, {}}};
 }
 
-void DiffVisitor2::DynamicLoop(const std::vector<size_t> &lows,
-                               const std::vector<size_t> &highs,
-                               const std::function<void(
-                                   const std::vector<size_t> &)> &job)
+void DiffVisitor2::DynamicLoop(
+    const std::vector<size_t> &lows, const std::vector<size_t> &highs,
+    const std::function<void(const std::vector<size_t> &)> &job)
 {
     size_t N = lows.size();
     std::vector<size_t> idx = lows;
@@ -375,7 +427,7 @@ __always_inline std::string DiffVisitor2::Indent()
 }
 
 __always_inline void DiffVisitor2::PrintDetailedExprs(const DetailedExprs &de,
-    const std::string &msg)
+                                                      const std::string &msg)
 {
     if (!m_bDebug)
         return;
@@ -388,7 +440,7 @@ __always_inline void DiffVisitor2::PrintDetailedExprs(const DetailedExprs &de,
             std::cout << Indent() << "  ";
             for (const auto &m : match) {
                 std::cout << m.first->__str__() << " -> " << m.second->__str__()
-                    << ", ";
+                          << ", ";
             }
             std::cout << "\n";
         }
@@ -396,8 +448,9 @@ __always_inline void DiffVisitor2::PrintDetailedExprs(const DetailedExprs &de,
 }
 
 __always_inline DiffVisitor2::DetailedExprs
-DiffVisitor2::AggrigateTwoDetailedExprs(
-    const DetailedExprs &de1, const DetailedExprs &de2, bool isAdd, bool isMul)
+DiffVisitor2::AggrigateTwoDetailedExprs(const DetailedExprs &de1,
+                                        const DetailedExprs &de2, bool isAdd,
+                                        bool isMul)
 {
     PrintDetailedExprs(de1, "AggrigateTwoDetailedExprs DE1");
     PrintDetailedExprs(de2, "AggrigateTwoDetailedExprs DE2");
@@ -413,27 +466,24 @@ DiffVisitor2::AggrigateTwoDetailedExprs(
         VecMatchesMap unionOfAllIterations;
 
         for (auto &piece : de1) {
-            unionOfAllIterations.insert(
-                unionOfAllIterations.end(),
-                piece.second.begin(),
-                piece.second.end()
-            );
+            unionOfAllIterations.insert(unionOfAllIterations.end(),
+                                        piece.second.begin(),
+                                        piece.second.end());
         }
         for (auto &piece : de2) {
-            unionOfAllIterations.insert(
-                unionOfAllIterations.end(),
-                piece.second.begin(),
-                piece.second.end()
-            );
+            unionOfAllIterations.insert(unionOfAllIterations.end(),
+                                        piece.second.begin(),
+                                        piece.second.end());
         }
 
-        // Remove duplicates from unionOfAllIterations without using STL algorithms
+        // Remove duplicates from unionOfAllIterations without using STL
+        // algorithms
         for (size_t i = 0; i < unionOfAllIterations.size(); ++i) {
             for (size_t j = i + 1; j < unionOfAllIterations.size();) {
                 if (unordered_eq(unionOfAllIterations[i],
                                  unionOfAllIterations[j])) {
-                    unionOfAllIterations.
-                        erase(unionOfAllIterations.begin() + j);
+                    unionOfAllIterations.erase(unionOfAllIterations.begin()
+                                               + j);
                 } else {
                     ++j;
                 }
@@ -441,13 +491,15 @@ DiffVisitor2::AggrigateTwoDetailedExprs(
         }
 
         std::map<RCP<const Basic>, std::vector<map_basic_basic>,
-                 RCPBasicKeyLess> exprValPerUnifiedIter;
+                 RCPBasicKeyLess>
+            exprValPerUnifiedIter;
         for (auto &iter : unionOfAllIterations) {
             if (iter.empty())
                 continue;
             RCP<const Basic> exprAggr = zero;
             for (auto &piece : de1) {
-                // check if iter which is a map_basic_basic is in piece.second's vector of map_basic_basic
+                // check if iter which is a map_basic_basic is in piece.second's
+                // vector of map_basic_basic
                 for (auto &c : piece.second) {
                     if (unordered_eq(iter, c)) {
                         // Found a match, add to the map
@@ -457,7 +509,8 @@ DiffVisitor2::AggrigateTwoDetailedExprs(
                 }
             }
             for (auto &piece : de2) {
-                // check if iter which is a map_basic_basic is in piece.second's vector of map_basic_basic
+                // check if iter which is a map_basic_basic is in piece.second's
+                // vector of map_basic_basic
                 for (auto &c : piece.second) {
                     if (unordered_eq(iter, c)) {
                         // Found a match, add to the map
@@ -480,11 +533,8 @@ DiffVisitor2::AggrigateTwoDetailedExprs(
         unionOfAllIterations.erase(
             std::remove_if(unionOfAllIterations.begin(),
                            unionOfAllIterations.end(),
-                           [](const map_basic_basic &m) {
-                               return m.empty();
-                           }),
-            unionOfAllIterations.end()
-        );
+                           [](const map_basic_basic &m) { return m.empty(); }),
+            unionOfAllIterations.end());
 
         if (unionOfAllIterations.empty()) {
             // it means that both de1 and de2 have no match maps.
@@ -520,24 +570,26 @@ DiffVisitor2::AggrigateTwoDetailedExprs(
                         }
                     }
                     if (piece1.second.empty()) {
-                        // no maps in piece1 means that it is valid for the universe set.
+                        // no maps in piece1 means that it is valid for the
+                        // universe set.
                         intersection = piece2.second; // take all from piece2
                     } else if (piece2.second.empty()) {
-                        // no maps in piece2 means that it is valid for the universe set.
+                        // no maps in piece2 means that it is valid for the
+                        // universe set.
                         intersection = piece1.second; // take all from piece1
                     }
-                    //if (!intersection.empty()) {
-                    // If we have an intersection, create a new entry
-                    result.emplace_back(
-                        mul(piece1.first, piece2.first),
-                        intersection
-                    );
+                    // if (!intersection.empty()) {
+                    //  If we have an intersection, create a new entry
+                    result.emplace_back(mul(piece1.first, piece2.first),
+                                        intersection);
                     //}
                 }
             }
-            // now we need to find all pieces with the same expr and merge their maps.
+            // now we need to find all pieces with the same expr and merge their
+            // maps.
             std::map<RCP<const Basic>, std::vector<map_basic_basic>,
-                     RCPBasicKeyLess> exprValPerUnifiedIter;
+                     RCPBasicKeyLess>
+                exprValPerUnifiedIter;
             for (auto &piece : result) {
                 RCP<const Basic> exprAggr = piece.first;
                 if (piece.second.empty()) {
@@ -547,7 +599,6 @@ DiffVisitor2::AggrigateTwoDetailedExprs(
                         exprValPerUnifiedIter[exprAggr].push_back(iter);
                     }
                 }
-
             }
             result.clear();
             for (const auto &pair : exprValPerUnifiedIter) {
