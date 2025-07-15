@@ -8,123 +8,125 @@ endif()
 
 if (WITH_GENERATE_PARSER)
     add_custom_command(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/parser/parser.tab.cc
-                      COMMAND ${BISON_EXECUTABLE} -Wcounterexamples -d parser.yy
-                      DEPENDS parser/parser.yy
-                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/parser
-                     )
+            COMMAND ${BISON_EXECUTABLE} -Wcounterexamples -d parser.yy
+            DEPENDS parser/parser.yy
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/parser
+    )
 
     add_custom_command(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/parser/tokenizer.cpp
-                      COMMAND ${RE2C_EXECUTABLE} -W  --no-generation-date -b tokenizer.re -o tokenizer.cpp
-                      DEPENDS parser/tokenizer.re
-                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/parser
-                     )
+            COMMAND ${RE2C_EXECUTABLE} -W  --no-generation-date -b tokenizer.re -o tokenizer.cpp
+            DEPENDS parser/tokenizer.re
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/parser
+    )
 
     add_custom_command(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/parser/sbml/sbml_parser.tab.cc
             COMMAND ${BISON_EXECUTABLE} -d sbml_parser.yy
             DEPENDS parser/sbml/sbml_parser.yy
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/parser/sbml
-            )
+    )
 
     add_custom_command(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/parser/sbml/sbml_tokenizer.cpp
             COMMAND ${RE2C_EXECUTABLE} -W  --no-generation-date -b sbml_tokenizer.re -o sbml_tokenizer.cpp
             DEPENDS parser/sbml/sbml_tokenizer.re
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/parser/sbml
-            )
+    )
 endif()
 
 add_subdirectory(utilities/matchpycpp)
 
 set(SRC
-    add.cpp
-    basic.cpp
-    streaming_serializer.cpp
-    streaming_deserializer.cpp
-    complex.cpp
-    complex_double.cpp
-    constants.cpp
-    cse.cpp
-    cwrapper.cpp
-    dense_matrix.cpp
-    derivative.cpp
-    dict.cpp
-    diophantine.cpp
-    eval.cpp
-    eval_double.cpp
-    expand.cpp
-    expression.cpp
-    fields.cpp
-    finitediff.cpp
-    functions.cpp
-    infinity.cpp
-    integer.cpp
-    logic.cpp
-    matrix.cpp
-    monomials.cpp
-    mul.cpp
-    nan.cpp
-    ntheory.cpp
-    ntheory_funcs.cpp
-    number.cpp
-    numer_denom.cpp
-    parser/parser_old.cpp
-    parser/parser.tab.cc
-    parser/parser.cpp
-    parser/tokenizer.cpp
-    parser/sbml/sbml_parser.tab.cc
-    parser/sbml/sbml_parser.cpp
-    parser/sbml/sbml_tokenizer.cpp
-    polys/basic_conversions.cpp
-    polys/msymenginepoly.cpp
-    polys/uexprpoly.cpp
-    polys/uintpoly.cpp
-    polys/uratpoly.cpp
-    pow.cpp
-    prime_sieve.cpp
-    printers/codegen.cpp
-    printers/mathml.cpp
-    printers/sbml.cpp
-    printers/strprinter.cpp
-    printers/latex.cpp
-    printers/unicode.cpp
-    printers/stringbox.cpp
-    rational.cpp
-    real_double.cpp
-    rewrite.cpp
-    rings.cpp
-    series.cpp
-    series_generic.cpp
-    sets.cpp
-    set_funcs.cpp
-    solve.cpp
-    sparse_matrix.cpp
-    symbol.cpp
-    symengine_rcp.cpp
-    visitor.cpp
-    test_visitors.cpp
-    assumptions.cpp
-    refine.cpp
-    simplify.cpp
-    tuple.cpp
-    matrices/identity_matrix.cpp
-    matrices/matrix_symbol.cpp
-    matrices/zero_matrix.cpp
-    matrices/diagonal_matrix.cpp
-    matrices/immutable_dense_matrix.cpp
-    matrices/matrix_add.cpp
-    matrices/hadamard_product.cpp
-    matrices/matrix_mul.cpp
-    matrices/conjugate_matrix.cpp
-    matrices/transpose.cpp
-    matrices/trace.cpp
-    matrices/size.cpp
-    matrices/is_zero.cpp
-    matrices/is_real.cpp
-    matrices/is_symmetric.cpp
-    matrices/is_square.cpp
-    matrices/is_diagonal.cpp
-    matrices/is_lower.cpp
-    matrices/is_upper.cpp
-    matrices/is_toeplitz.cpp
+        add.cpp
+        basic.cpp
+        streaming_serializer.cpp
+        streaming_deserializer.cpp
+        complex.cpp
+        complex_double.cpp
+        constants.cpp
+        cse.cpp
+        cwrapper.cpp
+        dense_matrix.cpp
+        derivative.cpp
+        diff_memaccess.cpp
+        modulo_visitor.cpp
+        dict.cpp
+        diophantine.cpp
+        eval.cpp
+        eval_double.cpp
+        expand.cpp
+        expression.cpp
+        fields.cpp
+        finitediff.cpp
+        functions.cpp
+        infinity.cpp
+        integer.cpp
+        logic.cpp
+        matrix.cpp
+        monomials.cpp
+        mul.cpp
+        nan.cpp
+        ntheory.cpp
+        ntheory_funcs.cpp
+        number.cpp
+        numer_denom.cpp
+        parser/parser_old.cpp
+        parser/parser.tab.cc
+        parser/parser.cpp
+        parser/tokenizer.cpp
+        parser/sbml/sbml_parser.tab.cc
+        parser/sbml/sbml_parser.cpp
+        parser/sbml/sbml_tokenizer.cpp
+        polys/basic_conversions.cpp
+        polys/msymenginepoly.cpp
+        polys/uexprpoly.cpp
+        polys/uintpoly.cpp
+        polys/uratpoly.cpp
+        pow.cpp
+        prime_sieve.cpp
+        printers/codegen.cpp
+        printers/mathml.cpp
+        printers/sbml.cpp
+        printers/strprinter.cpp
+        printers/latex.cpp
+        printers/unicode.cpp
+        printers/stringbox.cpp
+        rational.cpp
+        real_double.cpp
+        rewrite.cpp
+        rings.cpp
+        series.cpp
+        series_generic.cpp
+        sets.cpp
+        set_funcs.cpp
+        solve.cpp
+        sparse_matrix.cpp
+        symbol.cpp
+        symengine_rcp.cpp
+        visitor.cpp
+        test_visitors.cpp
+        assumptions.cpp
+        refine.cpp
+        simplify.cpp
+        tuple.cpp
+        matrices/identity_matrix.cpp
+        matrices/matrix_symbol.cpp
+        matrices/zero_matrix.cpp
+        matrices/diagonal_matrix.cpp
+        matrices/immutable_dense_matrix.cpp
+        matrices/matrix_add.cpp
+        matrices/hadamard_product.cpp
+        matrices/matrix_mul.cpp
+        matrices/conjugate_matrix.cpp
+        matrices/transpose.cpp
+        matrices/trace.cpp
+        matrices/size.cpp
+        matrices/is_zero.cpp
+        matrices/is_real.cpp
+        matrices/is_symmetric.cpp
+        matrices/is_square.cpp
+        matrices/is_diagonal.cpp
+        matrices/is_lower.cpp
+        matrices/is_upper.cpp
+        matrices/is_toeplitz.cpp
 )
 
 if ("${SYMENGINE_INTEGER_CLASS}" STREQUAL "BOOSTMP")
@@ -163,115 +165,117 @@ endif()
 
 # Needed for "make install"
 set(HEADERS
-    add.h
-    basic.h
-    streaming_serializer.h
-    streaming_deserializer.h
-    basic-inl.h
-    basic-methods.inc
-    complex_double.h
-    complex.h
-    complex_mpc.h
-    constants.h
-    cwrapper.h
-    derivative.h
-    dict.h
-    diophantine.h
-    eval_arb.h
-    eval_double.h
-    eval.h
-    eval_mpc.h
-    eval_mpfr.h
-    expression.h
-    fields.h
-    finitediff.h
-    flint_wrapper.h
-    functions.h
-    infinity.h
-    integer.h
-    lambda_double.h
-    llvm_double.h
-    logic.h
-    matrix.h
-    monomials.h
-    mp_class.h
-    mp_wrapper.h
-    mul.h
-    nan.h
-    ntheory.h
-    ntheory_funcs.h
-    number.h
-    parser.h
-    parser/parser.h
-    parser/tokenizer.h
-    parser/sbml/sbml_parser.h
-    parser/sbml/sbml_tokenizer.h
-    polys/basic_conversions.h
-    polys/cancel.h
-    polys/uexprpoly.h
-    polys/uintpoly_flint.h
-    polys/uintpoly.h
-    polys/uintpoly_piranha.h
-    polys/upolybase.h
-    polys/uratpoly.h
-    polys/usymenginepoly.h
-    polys/msymenginepoly.h
-    pow.h
-    prime_sieve.h
-    printers/codegen.h
-    printers/mathml.h
-    printers/sbml.h
-    printers/strprinter.h
-    printers/latex.h
-    printers/unicode.h
-    printers/stringbox.h
-    printers.h
-    rational.h
-    real_double.h
-    real_mpfr.h
-    rings.h
-    serialize-cereal.h
-    series_flint.h
-    series_generic.h
-    series.h
-    series_piranha.h
-    series_visitor.h
-    sets.h
-    solve.h
-    subs.h
-    symbol.h
-    symengine_assert.h
-    symengine_casts.h
-    symengine_exception.h
-    symengine_rcp.h
-    tribool.h
-    type_codes.inc
-    visitor.h
-    test_visitors.h
-    assumptions.h
-    refine.h
-    simplify.h
-    utilities/stream_fmt.h
-    tuple.h
-    matrix_expressions.h
-    matrices/matrix_expr.h
-    matrices/identity_matrix.h
-    matrices/matrix_symbol.h
-    matrices/zero_matrix.h
-    matrices/diagonal_matrix.h
-    matrices/immutable_dense_matrix.h
-    matrices/matrix_add.h
-    matrices/hadamard_product.h
-    matrices/matrix_mul.h
-    matrices/conjugate_matrix.h
-    matrices/size.h
-    matrices/transpose.h
-    matrices/trace.h
+        add.h
+        basic.h
+        streaming_serializer.h
+        streaming_deserializer.h
+        basic-inl.h
+        basic-methods.inc
+        complex_double.h
+        complex.h
+        complex_mpc.h
+        constants.h
+        cwrapper.h
+        derivative.h
+        diff_memaccess.h
+        modulo_visitor.h
+        dict.h
+        diophantine.h
+        eval_arb.h
+        eval_double.h
+        eval.h
+        eval_mpc.h
+        eval_mpfr.h
+        expression.h
+        fields.h
+        finitediff.h
+        flint_wrapper.h
+        functions.h
+        infinity.h
+        integer.h
+        lambda_double.h
+        llvm_double.h
+        logic.h
+        matrix.h
+        monomials.h
+        mp_class.h
+        mp_wrapper.h
+        mul.h
+        nan.h
+        ntheory.h
+        ntheory_funcs.h
+        number.h
+        parser.h
+        parser/parser.h
+        parser/tokenizer.h
+        parser/sbml/sbml_parser.h
+        parser/sbml/sbml_tokenizer.h
+        polys/basic_conversions.h
+        polys/cancel.h
+        polys/uexprpoly.h
+        polys/uintpoly_flint.h
+        polys/uintpoly.h
+        polys/uintpoly_piranha.h
+        polys/upolybase.h
+        polys/uratpoly.h
+        polys/usymenginepoly.h
+        polys/msymenginepoly.h
+        pow.h
+        prime_sieve.h
+        printers/codegen.h
+        printers/mathml.h
+        printers/sbml.h
+        printers/strprinter.h
+        printers/latex.h
+        printers/unicode.h
+        printers/stringbox.h
+        printers.h
+        rational.h
+        real_double.h
+        real_mpfr.h
+        rings.h
+        serialize-cereal.h
+        series_flint.h
+        series_generic.h
+        series.h
+        series_piranha.h
+        series_visitor.h
+        sets.h
+        solve.h
+        subs.h
+        symbol.h
+        symengine_assert.h
+        symengine_casts.h
+        symengine_exception.h
+        symengine_rcp.h
+        tribool.h
+        type_codes.inc
+        visitor.h
+        test_visitors.h
+        assumptions.h
+        refine.h
+        simplify.h
+        utilities/stream_fmt.h
+        tuple.h
+        matrix_expressions.h
+        matrices/matrix_expr.h
+        matrices/identity_matrix.h
+        matrices/matrix_symbol.h
+        matrices/zero_matrix.h
+        matrices/diagonal_matrix.h
+        matrices/immutable_dense_matrix.h
+        matrices/matrix_add.h
+        matrices/hadamard_product.h
+        matrices/matrix_mul.h
+        matrices/conjugate_matrix.h
+        matrices/size.h
+        matrices/transpose.h
+        matrices/trace.h
 )
 
 if (NOT WITH_SYSTEM_CEREAL)
-  file(GLOB_RECURSE CEREAL_HEADERS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "utilities/cereal/include/*")
-  set(HEADERS ${HEADERS} ${CEREAL_HEADERS})
+    file(GLOB_RECURSE CEREAL_HEADERS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "utilities/cereal/include/*")
+    set(HEADERS ${HEADERS} ${CEREAL_HEADERS})
 endif()
 
 include(GNUInstallDirs)
@@ -294,16 +298,16 @@ generate_export_header(symengine)
 set_target_properties(symengine PROPERTIES COMPILE_DEFINITIONS "symengine_EXPORTS")
 if (BUILD_SHARED_LIBS)
     set_target_properties(
-        symengine
-        PROPERTIES
-        VERSION ${SYMENGINE_VERSION}
-        SOVERSION ${SYMENGINE_MAJOR_VERSION}.${SYMENGINE_MINOR_VERSION}
+            symengine
+            PROPERTIES
+            VERSION ${SYMENGINE_VERSION}
+            SOVERSION ${SYMENGINE_MAJOR_VERSION}.${SYMENGINE_MINOR_VERSION}
     )
     if (WIN32)
         set_target_properties(
-            symengine
-            PROPERTIES
-            RUNTIME_OUTPUT_NAME symengine-${SYMENGINE_MAJOR_VERSION}.${SYMENGINE_MINOR_VERSION}
+                symengine
+                PROPERTIES
+                RUNTIME_OUTPUT_NAME symengine-${SYMENGINE_MAJOR_VERSION}.${SYMENGINE_MINOR_VERSION}
         )
     endif()
 endif()
@@ -338,18 +342,18 @@ if (WITH_LLVM AND NOT SYMENGINE_LLVM_LINK_DOWNSTREAM AND NOT WITH_SYMENGINE_TEUC
 endif()
 
 install(TARGETS symengine
-            EXPORT SymEngineTargets
-            RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-            ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-            LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-            INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-        )
+        EXPORT SymEngineTargets
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
 install(FILES
-    "${symengine_BINARY_DIR}/symengine/symengine_config.h"
-    "${symengine_BINARY_DIR}/symengine/symengine_config_cling.h"
-    "${symengine_BINARY_DIR}/symengine/symengine_export.h"
+        "${symengine_BINARY_DIR}/symengine/symengine_config.h"
+        "${symengine_BINARY_DIR}/symengine/symengine_config_cling.h"
+        "${symengine_BINARY_DIR}/symengine/symengine_export.h"
         DESTINATION
-    include/symengine)
+        include/symengine)
 
 # make install
 macro(INSTALL_HEADERS_WITH_DIRECTORY HEADER_LIST)
